@@ -1,0 +1,8 @@
+---
+# Safe defaults (example)
+ansible_become: true
+ansible_python_interpreter: /usr/bin/python3
+
+security_ssh_port: 22
+security_ufw_allow_tcp_base: [22]
+security_ufw_allow_tcp_extra: []

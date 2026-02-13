@@ -1,0 +1,9 @@
+---
+# Example-only placeholders.
+# Do NOT commit real operator contact info, fingerprints, onion addresses, or any identifying metadata.
+
+tor_contact_info: "email:operator@example.invalid url:https://example.invalid proof:ciissversion:2"
+
+tor_my_family: []
+
+security_ufw_allow_tcp_extra: [443]

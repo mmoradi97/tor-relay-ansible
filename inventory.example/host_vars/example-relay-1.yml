@@ -1,0 +1,5 @@
+---
+# Example per-host vars
+# Keep real values only in your private ./inventory
+
+tor_nickname: "ExampleRelay"

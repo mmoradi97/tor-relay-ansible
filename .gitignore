@@ -1,0 +1,22 @@
+# Private inventory (must not be committed)
+inventory/
+
+# Common secrets
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.csr
+*.asc
+*.gpg
+
+# Vault and dotenv
+.vault_pass
+*.vault
+.env
+.env.*
+
+# Ansible artifacts
+*.retry
