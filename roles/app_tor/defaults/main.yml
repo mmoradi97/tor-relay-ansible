@@ -1,0 +1,6 @@
+---
+# Public-safe defaults placeholder.
+# Real deployment variables should be defined in your private inventory/group_vars.
+
+# Example only
+tor_data_dir: "/var/lib/tor"

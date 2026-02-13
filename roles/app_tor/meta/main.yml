@@ -1,0 +1,6 @@
+---
+dependencies:
+  - role: os_baseline
+    tags: ["deps"]
+  - role: security_baseline
+    tags: ["deps"]
