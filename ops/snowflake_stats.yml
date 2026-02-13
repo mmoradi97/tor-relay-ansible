@@ -1,0 +1,65 @@
+---
+- name: Aggregate Snowflake stats with totals
+  hosts: snowflake
+  gather_facts: false
+
+  vars:
+    # Where the stats script lives on the remote host (override per-host/group)
+    snowflake_stats_cmd: "python3 {{ snowflake_stats_path | default('/usr/local/bin/snowflake_stats.py') }}"
+
+  tasks:
+    - name: Run snowflake stats script
+      ansible.builtin.shell: "{{ snowflake_stats_cmd }}"
+      register: script_output
+      failed_when: false
+
+    - name: Parse stats from script output
+      ansible.builtin.set_fact:
+        my_conn: "{{ (script_output.stdout | regex_search('Connections: (\\d+)', '\\1') | default(['0'], true))[0] | int }}"
+        my_down: "{{ (script_output.stdout | regex_search('Down\\s+: ([\\d.]+)', '\\1') | default(['0.0'], true))[0] | float }}"
+        my_up: "{{ (script_output.stdout | regex_search('Up\\s+: ([\\d.]+)', '\\1') | default(['0.0'], true))[0] | float }}"
+        my_ratio: "{{ (script_output.stdout | regex_search('Ratio\\s+: ([\\d.:]+)', '\\1') | default(['0:0'], true))[0] }}"
+        has_stats: "{{ script_output.stdout is search('Connections:') }}"
+
+    - name: Calculate column widths
+      run_once: true
+      delegate_to: localhost
+      ansible.builtin.set_fact:
+        name_width: "{{ ([4] + (ansible_play_hosts | map('extract', hostvars, 'report_name') | map('default', None) | list)) | map('default', '') | map('string') | map('length') | list + (ansible_play_hosts | map('length') | list) | list | max }}"
+
+    - name: Display global report
+      run_once: true
+      delegate_to: localhost
+      vars:
+        total_conns: "{{ ansible_play_hosts | map('extract', hostvars, 'my_conn') | map('int') | sum }}"
+        total_down: "{{ ansible_play_hosts | map('extract', hostvars, 'my_down') | map('float') | sum }}"
+        total_up: "{{ ansible_play_hosts | map('extract', hostvars, 'my_up') | map('float') | sum }}"
+        hosts_without_stats: "{{ ansible_play_hosts | map('extract', hostvars, 'has_stats') | select('equalto', false) | list | length }}"
+        report_time: "{{ lookup('pipe', 'date \"+%Y-%m-%d %H:%M:%S\"') }}"
+        nw: "{{ hostvars[inventory_hostname]['name_width'] | int }}"
+        sep_line: "{{ '=' * (nw + 52) }}"
+      ansible.builtin.pause:
+        seconds: 0
+        prompt: |
+
+          REPORT GENERATED: {{ report_time }}
+          {{ sep_line }}
+          {{ "%-{}s | CONNS | DOWN (GB) | UP (GB)   | RATIO".format(nw) | format("NAME") }}
+          {{ "-" * nw }}|-------|-----------|-----------|-------
+          {% for host in ansible_play_hosts %}
+          {% set h = hostvars[host] %}
+          {% set name = (h.report_name | default(host)) %}
+          {% if not h.has_stats %}
+          {{ "%-{}s | %5s | %9s | %9s | %s".format(nw) | format(name, "—", "—", "—", "NO STATS YET") }}
+          {% else %}
+          {{ "%-{}s | %5s | %9.2f | %9.2f | %s".format(nw) | format(name, h.my_conn, h.my_down, h.my_up, h.my_ratio) }}
+          {% endif %}
+          {% endfor %}
+          {{ "-" * nw }}|-------|-----------|-----------|-------
+          {{ "%-{}s | %5s | %9.2f | %9.2f | %.1f:1".format(nw) | format("TOTAL", total_conns, total_down, total_up, total_down / total_up if total_up > 0 else 0.0) }}
+          {{ sep_line }}
+          {% if hosts_without_stats > 0 %}
+          Note: {{ hosts_without_stats }} host(s) have no stats yet (containers recently started).
+          {% endif %}
+          (Press ENTER to finish)
+
