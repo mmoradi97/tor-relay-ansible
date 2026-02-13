@@ -1,0 +1,30 @@
+---
+- name: Keep my fleet updated with manual approval
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check for available updates
+      apt:
+        update_cache: yes
+        upgrade: dist
+      check_mode: yes
+      register: updates_check
+
+    - name: "PACKAGES TO UPDATE ON: {{ inventory_hostname }}"
+      debug:
+        msg: "{{ item }}"
+      loop: "{{ updates_check.stdout_lines | select('match', '^Inst ') | map('regex_replace', '^Inst ([^ ]+) .*', '\\1') | list }}"
+      when: updates_check.changed
+
+    - name: Ask for approval before proceeding
+      pause:
+        prompt: "Review the lists above. Press ENTER to continue or Ctrl+C then 'A' to abort."
+      delegate_to: localhost
+      run_once: yes
+      # Only prompt if at least one host in the fleet has updates
+      when: ansible_play_hosts | map('extract', hostvars, 'updates_check') | selectattr('changed') | list | count > 0
+
+    - name: Perform the actual upgrade
+      apt:
+        upgrade: dist
+      when: updates_check.changed

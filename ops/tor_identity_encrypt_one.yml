@@ -1,0 +1,28 @@
+---
+- name: Check plaintext archive exists ({{ tor_target_host }})
+  ansible.builtin.stat:
+    path: "{{ tor_local_plain }}"
+  register: plain_stat
+
+- name: Fail if plaintext archive missing ({{ tor_target_host }})
+  ansible.builtin.fail:
+    msg: "Missing {{ tor_local_plain }} on controller; fetch likely failed earlier."
+  when: not plain_stat.stat.exists
+
+- name: Check if vaulted output already exists ({{ tor_target_host }})
+  ansible.builtin.stat:
+    path: "{{ tor_vault_out_file }}"
+  register: vaulted_stat
+
+- name: Vault-encrypt output ({{ tor_target_host }})
+  ansible.builtin.command: >
+    ansible-vault encrypt
+    --vault-password-file {{ tor_vault_passfile }}
+    {{ tor_local_plain }}
+    --output {{ tor_vault_out_file }}
+  when: tor_identity_overwrite | bool or (not vaulted_stat.stat.exists)
+
+- name: Remove plaintext staging file ({{ tor_target_host }})
+  ansible.builtin.file:
+    path: "{{ tor_local_plain }}"
+    state: absent

@@ -1,0 +1,145 @@
+---
+- name: Prepare vault password + local dirs (NO sudo on localhost)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    ansible_become: false
+
+    repo_root: "{{ playbook_dir }}/.."
+    local_stage_dir: "{{ repo_root }}/.local/tor_identity/stage"
+    vault_out_dir: "{{ repo_root }}/.local/tor_identity/vaulted"
+    tor_vault_passfile: "{{ repo_root }}/.local/tor_identity/.vault_pass"
+
+  vars_prompt:
+    - name: tor_vault_password
+      prompt: "Vault password to encrypt Tor identity archives"
+      private: yes
+      confirm: yes
+      unsafe: yes
+
+  tasks:
+    - name: Create local staging dir
+      ansible.builtin.file:
+        path: "{{ local_stage_dir }}"
+        state: directory
+        mode: "0700"
+
+    - name: Create local vaulted output dir
+      ansible.builtin.file:
+        path: "{{ vault_out_dir }}"
+        state: directory
+        mode: "0700"
+
+    - name: Write temporary vault password file (local only)
+      ansible.builtin.copy:
+        dest: "{{ tor_vault_passfile }}"
+        content: "{{ tor_vault_password }}"
+        mode: "0600"
+
+- name: Create identity archives on relays and fetch to controller
+  hosts: tor_relays
+  become: true
+  gather_facts: false
+
+  vars:
+    tor_data_dir: "/var/lib/tor"
+    tor_remote_archive: "/tmp/{{ inventory_hostname }}_tor_identity.tgz"
+
+    repo_root: "{{ playbook_dir }}/.."
+    local_stage_dir: "{{ repo_root }}/.local/tor_identity/stage"
+
+  tasks:
+    - name: Remove any previous remote archive
+      ansible.builtin.file:
+        path: "{{ tor_remote_archive }}"
+        state: absent
+
+    - name: Check required keys directory exists
+      ansible.builtin.stat:
+        path: "{{ tor_data_dir }}/keys"
+      register: tor_keys_dir
+
+    - name: Fail if keys/ missing (cannot preserve identity)
+      ansible.builtin.fail:
+        msg: "Missing {{ tor_data_dir }}/keys on {{ inventory_hostname }}; cannot create identity backup."
+      when: not tor_keys_dir.stat.exists
+
+    - name: Check optional pt_state directory exists
+      ansible.builtin.stat:
+        path: "{{ tor_data_dir }}/pt_state"
+      register: tor_pt_state
+
+    - name: Check optional fingerprint file exists
+      ansible.builtin.stat:
+        path: "{{ tor_data_dir }}/fingerprint"
+      register: tor_fingerprint
+
+    - name: Build list of items to archive (keys + existing optional items)
+      ansible.builtin.set_fact:
+        tor_identity_items_existing: >-
+          {{
+            ['keys']
+            + (['pt_state'] if tor_pt_state.stat.exists else [])
+            + (['fingerprint'] if tor_fingerprint.stat.exists else [])
+          }}
+
+    - name: Create identity archive on relay (relative to DataDirectory)
+      ansible.builtin.command: >
+        tar -C {{ tor_data_dir }} -czf {{ tor_remote_archive }}
+        {{ tor_identity_items_existing | join(' ') }}
+      changed_when: true
+
+    - name: Fetch archive to controller staging
+      ansible.builtin.fetch:
+        src: "{{ tor_remote_archive }}"
+        dest: "{{ local_stage_dir }}/"
+        flat: true
+
+    - name: Cleanup remote archive
+      ansible.builtin.file:
+        path: "{{ tor_remote_archive }}"
+        state: absent
+
+- name: Encrypt fetched archives locally (NO sudo on localhost)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    ansible_become: false
+
+    tor_targets_group: "tor_relays"
+    tor_identity_overwrite: false
+
+    repo_root: "{{ playbook_dir }}/.."
+    local_stage_dir: "{{ repo_root }}/.local/tor_identity/stage"
+    vault_out_dir: "{{ repo_root }}/.local/tor_identity/vaulted"
+    tor_vault_passfile: "{{ repo_root }}/.local/tor_identity/.vault_pass"
+
+  tasks:
+    - name: Encrypt per-host archives (vaulted)
+      ansible.builtin.include_tasks: tor_identity_encrypt_one.yml
+      loop: "{{ groups[tor_targets_group] }}"
+      loop_control:
+        loop_var: tor_target_host
+      vars:
+        tor_local_plain: "{{ local_stage_dir }}/{{ tor_target_host }}_tor_identity.tgz"
+        tor_vault_out_file: "{{ vault_out_dir }}/{{ tor_target_host }}_tor_identity.tgz.vault"
+
+- name: Cleanup local vault passfile (NO sudo on localhost)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    ansible_become: false
+
+    tor_vault_passfile: "{{ playbook_dir }}/../.local/tor_identity/.vault_pass"
+
+  tasks:
+    - name: Remove temporary vault password file
+      ansible.builtin.file:
+        path: "{{ tor_vault_passfile }}"
+        state: absent

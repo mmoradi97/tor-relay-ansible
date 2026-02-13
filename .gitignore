@@ -1,6 +1,10 @@
 # Private inventory (must not be committed)
 inventory/
 
+# Local working directories
+.local/
+.tmp/
+
 # Common secrets
 *.pem
 *.key
@@ -20,3 +24,7 @@ inventory/
 
 # Ansible artifacts
 *.retry
+
+# Archives / backups
+*.tgz
+*.tar.gz
