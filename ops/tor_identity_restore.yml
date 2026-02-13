@@ -1,0 +1,48 @@
+---
+# Public-safe restore helper.
+#
+# This playbook is intentionally generic and assumes your Tor deployment logic
+# lives in your own roles/playbooks.
+#
+# It adds an interactive safety gate: it only proceeds if identity material is
+# missing and the operator types RESTORE.
+
+- name: Restore Tor identity (interactive; scratch installs)
+  hosts: "{{ target | default('tor_relays') }}"
+  become: true
+  gather_facts: false
+
+  vars:
+    # Keep safe default: refuse to stop Tor automatically.
+    tor_identity_restore_permit_stop: false
+
+    # Where the Tor DataDirectory is on the remote host.
+    tor_data_dir: "/var/lib/tor"
+
+  pre_tasks:
+    - name: Check if identity marker exists
+      ansible.builtin.stat:
+        path: "{{ tor_data_dir }}/keys/ed25519_master_id_secret_key"
+      register: tor_id
+
+    - name: Confirm restore (only when identity missing)
+      ansible.builtin.pause:
+        prompt: "Type RESTORE to restore Tor identity on {{ inventory_hostname }} (this writes keys into {{ tor_data_dir }})"
+      when: not tor_id.stat.exists
+      register: restore_confirm
+
+    - name: Abort if not confirmed
+      ansible.builtin.fail:
+        msg: "Not confirmed; skipping restore on {{ inventory_hostname }}."
+      when:
+        - not tor_id.stat.exists
+        - restore_confirm.user_input != "RESTORE"
+
+  tasks:
+    - name: Placeholder
+      ansible.builtin.fail:
+        msg: |
+          This public template does not ship a Tor role with restore logic.
+          Implement restore in your private role/playbook (e.g., decrypt a vaulted archive,
+          extract into {{ tor_data_dir }}, set ownership/permissions, then start Tor).
+      when: not tor_id.stat.exists
