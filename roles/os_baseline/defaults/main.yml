@@ -1,6 +1,16 @@
 ---
-# Placeholder defaults.
-# Ported role references task files; configure via your private inventory/group_vars.
+# Public-safe defaults for os_baseline
 
-os_baseline_set_hostname: false
-os_baseline_manage_hosts_file: false
+# Package management
+os_baseline_extra_packages: []
+os_baseline_do_upgrade: false
+os_baseline_autoremove: true
+
+# Time / NTP
+os_baseline_timezone: "Etc/UTC"
+os_baseline_ntp_servers:
+  - "pool.ntp.org"
+
+# Docker
+os_baseline_install_docker: false
+os_baseline_docker_users: []

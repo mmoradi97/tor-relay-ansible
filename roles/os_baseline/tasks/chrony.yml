@@ -1,0 +1,29 @@
+---
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ os_baseline_timezone }}"
+
+- name: Install chrony
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+    update_cache: true
+
+- name: Configure chrony servers
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony
+
+- name: Enable and start chrony
+  ansible.builtin.systemd:
+    name: chrony
+    enabled: true
+    state: started
+
+- name: Force initial time sync (optional)
+  ansible.builtin.command: chronyc makestep 1.0 -1
+  changed_when: false

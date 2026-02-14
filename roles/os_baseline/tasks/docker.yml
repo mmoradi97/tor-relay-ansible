@@ -1,0 +1,10 @@
+- name: Install and configure Docker
+  ansible.builtin.include_role:
+    name: geerlingguy.docker
+  vars:
+    docker_users: "{{ os_baseline_docker_users }}"
+  when: os_baseline_install_docker
+
+- name: Refresh SSH connection so docker group applies
+  ansible.builtin.meta: reset_connection
+  when: os_baseline_install_docker

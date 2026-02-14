@@ -1,2 +1,5 @@
 ---
-# Placeholder handler file (will be populated when porting role internals).
+- name: Restart chrony
+  ansible.builtin.systemd:
+    name: chrony
+    state: restarted
