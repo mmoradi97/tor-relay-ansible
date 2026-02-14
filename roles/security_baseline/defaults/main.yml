@@ -1,9 +1,15 @@
 ---
-# Public-safe defaults placeholder.
-# The referenced task files will define/consume variables for SSH/UFW/fail2ban behavior.
+# Public-safe defaults for security_baseline
 
 security_ssh_port: 22
+
+# UFW rules
 security_ufw_allow_tcp_base: [22]
 security_ufw_allow_tcp_extra: []
 security_ufw_allow_udp_ranges_base: []
 security_ufw_allow_udp_ranges_extra: []
+
+# fail2ban
+security_fail2ban_enabled: true
+# Prefer defining this per environment. Safe default: only localhost.
+security_fail2ban_ignoreip: "127.0.0.1/8 ::1"

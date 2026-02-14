@@ -1,8 +1,10 @@
-# Not ported yet
+# Port status
 
-The following task files are referenced by `tasks/main.yml` but are not yet ported:
+All task files referenced by `tasks/main.yml` are now ported:
 - tasks/ssh.yml
 - tasks/ufw.yml
 - tasks/fail2ban.yml
 
-They will be ported next with sanitization.
+Safety notes:
+- UFW always allows the configured SSH port and the current Ansible connection port to reduce lockout risk.
+- Define any additional allow rules in your private `inventory/`.

@@ -1,0 +1,25 @@
+---
+- name: Ensure OpenSSH server is installed
+  ansible.builtin.apt:
+    name: openssh-server
+    state: present
+    update_cache: true
+
+- name: Install SSH hardening drop-in
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/00-security_baseline.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Port {{ security_ssh_port }}
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PubkeyAuthentication yes
+      UsePAM yes
+  notify: Reload SSH
+
+- name: Validate SSH config
+  ansible.builtin.command: /usr/sbin/sshd -t
+  changed_when: false
