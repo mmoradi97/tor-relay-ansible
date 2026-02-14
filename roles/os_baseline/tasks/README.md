@@ -1,11 +1,7 @@
 # Not ported yet
 
-The following task files are referenced by `tasks/main.yml` but are not yet ported:
-- tasks/hostname.yml
-- tasks/hosts.yml
-- tasks/packages.yml
-- tasks/chrony.yml
-- tasks/docker.yml
-- tasks/reboot.yml
+All referenced task files are now ported.
 
-They will be ported next with sanitization.
+Notes:
+- `hostname.yml` and `hosts.yml` are opt-in via variables to avoid imposing naming conventions in public.
+- Prefer setting `os_baseline_hostname` in your private inventory.

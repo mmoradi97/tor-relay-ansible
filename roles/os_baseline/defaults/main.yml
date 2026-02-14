@@ -6,6 +6,11 @@ os_baseline_extra_packages: []
 os_baseline_do_upgrade: false
 os_baseline_autoremove: true
 
+# Host identity (opt-in)
+os_baseline_set_hostname: false
+os_baseline_hostname: "{{ inventory_hostname }}"
+os_baseline_manage_hosts_file: false
+
 # Time / NTP
 os_baseline_timezone: "Etc/UTC"
 os_baseline_ntp_servers:
@@ -14,3 +19,6 @@ os_baseline_ntp_servers:
 # Docker
 os_baseline_install_docker: false
 os_baseline_docker_users: []
+
+# Reboot behavior
+os_baseline_reboot_if_required: false
