@@ -1,0 +1,71 @@
+---
+- name: Extract and aggregate Conduit stats
+  hosts: conduit
+  become: true
+  gather_facts: false
+
+  vars:
+    conduit_container_name: "{{ conduit_container_name | default('conduit') }}"
+    conduit_logs_tail: 200
+
+  tasks:
+    - name: Fetch last stats line
+      ansible.builtin.shell: |
+        docker logs --tail {{ conduit_logs_tail }} {{ conduit_container_name }} 2>&1 \
+          | grep '\[STATS\]' | tail -n 1 | sed 's/.*\[STATS\] //'
+      register: log_output
+      changed_when: false
+      failed_when: false
+
+    - name: Parse metrics (supports KB/MB/GB/TB)
+      ansible.builtin.set_fact:
+        connecting: "{{ log_output.stdout | regex_findall('Connecting: (\\d+)') | first | default(0, true) | int }}"
+        connected: "{{ log_output.stdout | regex_findall('Connected: (\\d+)') | first | default(0, true) | int }}"
+        u_val: "{{ log_output.stdout | regex_findall('Up: ([0-9.]+)') | first | default(0, true) | float }}"
+        u_unit: "{{ log_output.stdout | regex_findall('Up: [0-9.]+ (KB|MB|GB|TB)') | first | default('MB', true) }}"
+        d_val: "{{ log_output.stdout | regex_findall('Down: ([0-9.]+)') | first | default(0, true) | float }}"
+        d_unit: "{{ log_output.stdout | regex_findall('Down: [0-9.]+ (KB|MB|GB|TB)') | first | default('MB', true) }}"
+      when:
+        - log_output.stdout is defined
+        - log_output.stdout | length > 0
+
+    - name: Normalize traffic to MB
+      ansible.builtin.set_fact:
+        up_mb: >-
+          {{ (u_val | float * 1024 * 1024) if u_unit == 'TB'
+          else (u_val | float * 1024) if u_unit == 'GB'
+          else (u_val | float / 1024) if u_unit == 'KB'
+          else u_val | float }}
+        down_mb: >-
+          {{ (d_val | float * 1024 * 1024) if d_unit == 'TB'
+          else (d_val | float * 1024) if d_unit == 'GB'
+          else (d_val | float / 1024) if d_unit == 'KB'
+          else d_val | float }}
+      when:
+        - u_val is defined
+        - d_val is defined
+
+    - name: Individual report
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: {{ log_output.stdout | default('NO STATS LINE FOUND') }}"
+
+    - name: Fleet-wide aggregation
+      run_once: true
+      delegate_to: localhost
+      vars:
+        active_hosts: "{{ ansible_play_batch }}"
+        total_connecting: "{{ active_hosts | map('extract', hostvars, 'connecting') | map('default', 0) | map('int') | sum }}"
+        total_connected: "{{ active_hosts | map('extract', hostvars, 'connected') | map('default', 0) | map('int') | sum }}"
+        total_up_mb: "{{ active_hosts | map('extract', hostvars, 'up_mb') | map('default', 0) | map('float') | sum }}"
+        total_down_mb: "{{ active_hosts | map('extract', hostvars, 'down_mb') | map('default', 0) | map('float') | sum }}"
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "              AGGREGATE REPORT            "
+          - "=========================================="
+          - "REPORTING HOSTS:  {{ active_hosts | length }}"
+          - "TOTAL CONNECTING: {{ total_connecting }}"
+          - "TOTAL CONNECTED:  {{ total_connected }}"
+          - "TOTAL UPLOAD:     {{ (total_up_mb / 1024 / 1024) | round(2) ~ ' TB' if total_up_mb > 1048576 else (total_up_mb / 1024) | round(2) ~ ' GB' }}"
+          - "TOTAL DOWNLOAD:   {{ (total_down_mb / 1024 / 1024) | round(2) ~ ' TB' if total_down_mb > 1048576 else (total_down_mb / 1024) | round(2) ~ ' GB' }}"
+          - "=========================================="
