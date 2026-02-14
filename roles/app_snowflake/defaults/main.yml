@@ -1,0 +1,12 @@
+---
+# Public-safe defaults (template)
+
+app_snowflake_owner: "root"
+app_snowflake_dir: "/opt/snowflake"
+
+# Image/tag are placeholders; override as needed
+app_snowflake_image: "ghcr.io/thetorproject/snowflake-proxy"
+app_snowflake_image_tag: "latest"
+
+# Runtime options
+app_snowflake_restart: "unless-stopped"

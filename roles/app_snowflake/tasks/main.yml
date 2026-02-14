@@ -1,0 +1,29 @@
+---
+- name: Create Snowflake directory
+  ansible.builtin.file:
+    path: "{{ app_snowflake_dir }}"
+    state: directory
+    owner: "{{ app_snowflake_owner }}"
+    group: "{{ app_snowflake_owner }}"
+    mode: "0755"
+
+- name: Deploy docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ app_snowflake_dir }}/docker-compose.yml"
+    owner: "{{ app_snowflake_owner }}"
+    group: "{{ app_snowflake_owner }}"
+    mode: "0644"
+
+- name: Copy snowflake stats script
+  ansible.builtin.copy:
+    src: snowflake_stats.py
+    dest: "{{ app_snowflake_dir }}/snowflake_stats.py"
+    owner: "{{ app_snowflake_owner }}"
+    group: "{{ app_snowflake_owner }}"
+    mode: "0755"
+
+- name: Bring up Snowflake stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_snowflake_dir }}"
+    state: present
