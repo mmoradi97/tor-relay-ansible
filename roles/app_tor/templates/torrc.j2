@@ -1,0 +1,12 @@
+Nickname {{ tor_nickname }}
+{% if tor_contact_info | trim | length > 0 %}
+ContactInfo {{ tor_contact_info }}
+{% endif %}
+ORPort {{ tor_orport }}
+ExitRelay {{ 1 if tor_exit_relay else 0 }}
+SocksPort {{ tor_socks_port }}
+RelayBandwidthRate {{ tor_relay_bandwidth_rate }}
+RelayBandwidthBurst {{ tor_relay_bandwidth_burst }}
+{% if tor_my_family | length > 0 %}
+MyFamily {{ tor_my_family | join(',') }}
+{% endif %}

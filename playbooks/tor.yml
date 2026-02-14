@@ -1,0 +1,5 @@
+- hosts: tor_relays
+  become: true
+  roles:
+    - role: app_tor
+      tags: ["app_tor"]
