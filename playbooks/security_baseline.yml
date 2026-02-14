@@ -1,0 +1,8 @@
+---
+- name: Security baseline
+  hosts: all
+  become: true
+
+  roles:
+    - role: security_baseline
+      tags: ["security_baseline"]

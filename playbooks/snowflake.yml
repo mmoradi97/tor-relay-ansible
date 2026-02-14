@@ -1,0 +1,8 @@
+---
+- name: Snowflake proxy
+  hosts: snowflake
+  become: true
+
+  roles:
+    - role: app_snowflake
+      tags: ["app_snowflake"]

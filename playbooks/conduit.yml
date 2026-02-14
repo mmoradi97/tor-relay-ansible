@@ -1,0 +1,8 @@
+---
+- name: Conduit service
+  hosts: conduit
+  become: true
+
+  roles:
+    - role: app_conduit
+      tags: ["app_conduit"]

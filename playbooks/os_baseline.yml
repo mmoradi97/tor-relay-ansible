@@ -1,0 +1,8 @@
+---
+- name: OS baseline
+  hosts: all
+  become: true
+
+  roles:
+    - role: os_baseline
+      tags: ["os_baseline"]

@@ -1,0 +1,63 @@
+---
+- name: Remote traffic geography analysis (tcpdump + geoiplookup)
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    capture_duration: 120
+    temp_dir: "/tmp/geo_stats"
+    capture_iface: "docker0"
+
+  tasks:
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - tcpdump
+          - geoip-bin
+        state: present
+        update_cache: false
+
+    - name: Ensure temp directory exists
+      ansible.builtin.file:
+        path: "{{ temp_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Capture and resolve IP geography (wait {{ capture_duration }}s)
+      ansible.builtin.shell: >
+        timeout {{ capture_duration }} tcpdump -ni {{ capture_iface }} 'tcp or udp' -q 2>/dev/null
+        | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}'
+        | sort -u
+        | xargs -I {} geoiplookup {}
+        | awk -F': ' '{print $2}'
+        | sed 's/^ *//' > {{ temp_dir }}/countries.txt
+      register: capture_status
+      failed_when: capture_status.rc not in [0, 124]
+
+    - name: Get total count for summary
+      ansible.builtin.shell: "wc -l < {{ temp_dir }}/countries.txt"
+      register: total_count
+      changed_when: false
+
+    - name: Format top countries
+      ansible.builtin.shell: >
+        TOTAL={{ total_count.stdout | trim }};
+        if [ "$TOTAL" -eq 0 ]; then echo "No traffic captured"; exit 0; fi;
+        sort {{ temp_dir }}/countries.txt | uniq -c | sort -nr | head -n 10 |
+        awk -v tot="$TOTAL" '{printf "%5d  %s - %.2f%%\n", $1, substr($0, index($0,$2)), ($1/tot)*100}'
+      register: geo_report
+      changed_when: false
+
+    - name: Per-host geography report
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "Unique IPs ({{ capture_duration }}s): {{ total_count.stdout | trim }}"
+          - "------------------------------------------"
+          - "{{ geo_report.stdout_lines }}"
+
+    - name: Cleanup temp files
+      ansible.builtin.file:
+        path: "{{ temp_dir }}/countries.txt"
+        state: absent
