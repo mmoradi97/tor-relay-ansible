@@ -1,0 +1,21 @@
+services:
+  snowflake-proxy:
+    network_mode: host
+    image: {{ app_snowflake_image }}:{{ app_snowflake_image_tag }}
+    container_name: snowflake-proxy
+    restart: {{ app_snowflake_restart }}
+    command:
+      - "-ephemeral-ports-range"
+      - "{{ app_snowflake_ports_range }}"
+      - "-summary-interval"
+      - "{{ app_snowflake_summary_interval }}"
+
+  watchtower:
+    image: {{ app_watchtower_image }}
+    container_name: watchtower
+    restart: unless-stopped
+    environment:
+      - DOCKER_API_VERSION={{ app_watchtower_docker_api_version }}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval {{ app_watchtower_interval }} --cleanup snowflake-proxy

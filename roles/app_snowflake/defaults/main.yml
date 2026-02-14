@@ -10,3 +10,12 @@ app_snowflake_image_tag: "latest"
 
 # Runtime options
 app_snowflake_restart: "unless-stopped"
+
+# Snowflake args
+app_snowflake_ports_range: "32768:60999"
+app_snowflake_summary_interval: "1h"
+
+# Watchtower (optional)
+app_watchtower_image: "containrrr/watchtower"
+app_watchtower_interval: 86400
+app_watchtower_docker_api_version: "1.43"
