@@ -1,0 +1,22 @@
+---
+- name: Hostname
+  ansible.builtin.import_tasks: hostname.yml
+
+- name: /etc/hosts
+  ansible.builtin.import_tasks: hosts.yml
+
+- name: Packages
+  ansible.builtin.import_tasks: packages.yml
+
+- name: Time sync (chrony)
+  ansible.builtin.import_tasks: chrony.yml
+
+- name: Docker
+  ansible.builtin.import_tasks: docker.yml
+
+- name: Reboot if required
+  ansible.builtin.import_tasks: reboot.yml
+
+- name: HetrixTools monitoring agent
+  ansible.builtin.include_role:
+    name: monitoring_hetrixtools

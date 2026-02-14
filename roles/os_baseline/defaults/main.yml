@@ -1,0 +1,6 @@
+---
+# Placeholder defaults.
+# Ported role references task files; configure via your private inventory/group_vars.
+
+os_baseline_set_hostname: false
+os_baseline_manage_hosts_file: false
