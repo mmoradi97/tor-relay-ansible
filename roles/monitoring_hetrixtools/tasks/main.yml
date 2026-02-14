@@ -1,0 +1,125 @@
+---
+- name: Ensure HetrixTools SID is provided (unless explicitly skipped)
+  ansible.builtin.assert:
+    that:
+      - hetrixtools_sid is defined
+      - hetrixtools_sid | length > 0
+    fail_msg: "Missing hetrixtools_sid. Set it in your private inventory or pass it at runtime."
+  when:
+    - hetrixtools_enabled | bool
+    - not (hetrixtools_skip_sid_assert | default(false) | bool)
+
+- name: Ensure prerequisites exist (installer requires crontab and wget)
+  ansible.builtin.apt:
+    name:
+      - wget
+      - cron
+    state: present
+    update_cache: false
+  when: hetrixtools_enabled | bool
+
+- name: Build services string (param 3)
+  ansible.builtin.set_fact:
+    hetrixtools_services: >-
+      {{ (hetrixtools_services_base + hetrixtools_services_extra)
+         | unique | join(',') }}
+    hetrixtools_services_cfg_value: >-
+      {{
+        ((hetrixtools_services_base + hetrixtools_services_extra)
+          | unique | join(','))
+        if ((hetrixtools_services_base + hetrixtools_services_extra) | length > 0)
+        else '0'
+      }}
+  when: hetrixtools_enabled | bool
+  changed_when: false
+
+- name: Check HetrixTools agent script marker
+  ansible.builtin.stat:
+    path: /etc/hetrixtools/hetrixtools_agent.sh
+  register: hetrixtools_agent
+  when: hetrixtools_enabled | bool
+
+- name: Check HetrixTools config
+  ansible.builtin.stat:
+    path: /etc/hetrixtools/hetrixtools.cfg
+  register: hetrixtools_cfg
+  when: hetrixtools_enabled | bool
+
+- name: Decide if install is needed (missing marker/config or forced)
+  ansible.builtin.set_fact:
+    hetrixtools_need_install: >-
+      {{
+        (hetrixtools_force_reinstall | default(false) | bool) or
+        (not hetrixtools_agent.stat.exists) or
+        (not hetrixtools_cfg.stat.exists)
+      }}
+  when: hetrixtools_enabled | bool
+  changed_when: false
+
+- name: Download HetrixTools installer
+  ansible.builtin.get_url:
+    url: "{{ hetrixtools_install_url }}"
+    dest: /tmp/hetrixtools_install.sh
+    mode: "0755"
+  when:
+    - hetrixtools_enabled | bool
+    - hetrixtools_need_install | bool
+
+- name: Run HetrixTools installer (only when not already installed)
+  ansible.builtin.command: >-
+    bash /tmp/hetrixtools_install.sh
+    {{ hetrixtools_sid }}
+    {{ 1 if (hetrixtools_run_as_root | bool) else 0 }}
+    {{ hetrixtools_services if (hetrixtools_services | length > 0) else "0" }}
+    {{ hetrixtools_soft_raid }}
+    {{ hetrixtools_drive_health }}
+    {{ hetrixtools_running_processes }}
+    {{ hetrixtools_connection_ports }}
+  when:
+    - hetrixtools_enabled | bool
+    - hetrixtools_need_install | bool
+
+- name: Re-check HetrixTools agent script marker (post-install)
+  ansible.builtin.stat:
+    path: /etc/hetrixtools/hetrixtools_agent.sh
+  register: hetrixtools_agent_post
+  when: hetrixtools_enabled | bool
+  changed_when: false
+
+- name: Re-check HetrixTools config (post-install)
+  ansible.builtin.stat:
+    path: /etc/hetrixtools/hetrixtools.cfg
+  register: hetrixtools_cfg_post
+  when: hetrixtools_enabled | bool
+  changed_when: false
+
+- name: Ensure HetrixTools config has correct SID
+  ansible.builtin.lineinfile:
+    path: /etc/hetrixtools/hetrixtools.cfg
+    regexp: '^SID='
+    line: 'SID="{{ hetrixtools_sid }}"'
+    create: false
+  when:
+    - hetrixtools_enabled | bool
+    - hetrixtools_cfg_post.stat.exists
+
+- name: Ensure HetrixTools config has correct services list
+  ansible.builtin.lineinfile:
+    path: /etc/hetrixtools/hetrixtools.cfg
+    regexp: '^CheckServices='
+    line: 'CheckServices="{{ hetrixtools_services_cfg_value }}"'
+    create: false
+  when:
+    - hetrixtools_enabled | bool
+    - hetrixtools_cfg_post.stat.exists
+
+- name: Ensure HetrixTools agent cron job exists (idempotent)
+  ansible.builtin.cron:
+    name: HetrixTools agent
+    user: "{{ 'root' if (hetrixtools_run_as_root | bool) else 'hetrixtools' }}"
+    minute: "*"
+    job: "bash /etc/hetrixtools/hetrixtools_agent.sh >/dev/null 2>&1"
+    state: present
+  when:
+    - hetrixtools_enabled | bool
+    - hetrixtools_agent_post.stat.exists

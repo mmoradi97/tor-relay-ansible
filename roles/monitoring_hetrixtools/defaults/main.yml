@@ -1,0 +1,25 @@
+---
+# Public-safe defaults
+
+hetrixtools_enabled: false
+
+# Provide in your private inventory
+hetrixtools_sid: ""
+
+# Allow skipping SID assertion in CI
+hetrixtools_skip_sid_assert: false
+
+hetrixtools_install_url: "https://hetrixtools.com/install/"
+
+hetrixtools_run_as_root: false
+hetrixtools_soft_raid: 0
+hetrixtools_drive_health: 0
+hetrixtools_running_processes: 1
+hetrixtools_connection_ports: "0"
+
+hetrixtools_services_base:
+  - sshd
+  - docker
+  - fail2ban
+
+hetrixtools_services_extra: []
