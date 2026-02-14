@@ -1,0 +1,24 @@
+---
+- name: Ensure Docker SDK for Python is installed
+  ansible.builtin.apt:
+    name: python3-docker
+    state: present
+    update_cache: true
+
+- name: Pull Conduit image (force update)
+  community.docker.docker_image:
+    name: "{{ app_conduit_image }}"
+    source: pull
+    force_source: true
+
+- name: Run Conduit container
+  community.docker.docker_container:
+    name: "{{ app_conduit_name }}"
+    image: "{{ app_conduit_image }}"
+    state: started
+    restart_policy: unless-stopped
+    pull: true
+    recreate: true
+    volumes:
+      - "{{ app_conduit_volume }}:{{ app_conduit_mount }}"
+    command: "start -b {{ app_conduit_bandwidth }} -m {{ app_conduit_max_clients }}"

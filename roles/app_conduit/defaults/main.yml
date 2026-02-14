@@ -1,0 +1,13 @@
+---
+# Public-safe defaults (template)
+
+app_conduit_name: "conduit"
+app_conduit_image: "docker.io/psiphon/psiphon-tunnel-core"
+
+# Data volume
+app_conduit_volume: "conduit-data"
+app_conduit_mount: "/var/lib/conduit"
+
+# Runtime limits (placeholders)
+app_conduit_bandwidth: "50M"
+app_conduit_max_clients: 100
