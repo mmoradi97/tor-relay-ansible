@@ -1,4 +1,5 @@
-# tor-relay-ansible [![License](https://img.shields.io/github/license/mmoradi97/tor-relay-ansible)](./LICENSE) [![Ansible](https://img.shields.io/badge/ansible-playbooks-EE0000?logo=ansible&logoColor=white)](https://www.ansible.com/) [![community.general](https://img.shields.io/badge/community.general-10.7.0-blue)](./collections/requirements.yml)
+# tor-relay-ansible 
+[![License](https://img.shields.io/github/license/mmoradi97/tor-relay-ansible)](./LICENSE) [![Ansible](https://img.shields.io/badge/ansible-playbooks-EE0000?logo=ansible&logoColor=white)](https://www.ansible.com/) [![community.general](https://img.shields.io/badge/community.general-10.7.0-blue)](./collections/requirements.yml)
 
 An Ansible repo to manage hosts running Tor relays, Snowflake proxies, and a Conduit container, plus baseline hardening and ops utilities.
 
