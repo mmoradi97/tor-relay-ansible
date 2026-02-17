@@ -1,5 +1,10 @@
 ---
-# Stub while porting.
-- name: Guard: role not yet fully ported
-  ansible.builtin.fail:
-    msg: "roles/app_tor is not yet fully ported into the public repo. Please wait for the next commits (tasks/defaults/templates) or implement your own Tor role."
+- name: Tor | Install
+  ansible.builtin.import_tasks: install_flow.yml
+  when: app_tor_enabled | default(false) | bool
+  tags: [app_tor]
+
+- name: Tor | Uninstall (hard remove)
+  ansible.builtin.import_tasks: uninstall.yml
+  when: not (app_tor_enabled | default(false) | bool)
+  tags: [app_tor]

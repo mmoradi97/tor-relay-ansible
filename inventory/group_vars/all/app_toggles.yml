@@ -1,0 +1,6 @@
+# App deployment toggles
+# When true: install/configure the app.
+# When false: hard-remove the app (service/container, configs, data).
+app_tor_enabled: false
+app_snowflake_enabled: false
+app_conduit_enabled: false
