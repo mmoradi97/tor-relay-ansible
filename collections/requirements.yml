@@ -3,3 +3,4 @@ collections:
   # Pinned for reproducible runs.
   - name: community.general
     version: "10.7.0"
+  - name: community.docker
