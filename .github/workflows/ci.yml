@@ -32,5 +32,5 @@ jobs:
         run: |
           for f in playbooks/*.yml; do
             echo "==> syntax-check: $f"
-            ansible-playbook -i inventory.example/hosts.ini --syntax-check "$f"
+            ansible-playbook -i inventory.example/hosts.ini --roles-path roles --syntax-check "$f"
           done
