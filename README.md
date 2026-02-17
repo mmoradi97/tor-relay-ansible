@@ -1,9 +1,16 @@
 [![CI](https://github.com/mmoradi97/tor-relay-ansible/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mmoradi97/tor-relay-ansible/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/mmoradi97/tor-relay-ansible)](./LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![Ansible](https://img.shields.io/badge/ansible-playbooks-EE0000?logo=ansible&logoColor=white)](https://www.ansible.com/)
 
 # tor-relay-ansible
 
 Public, sanitized Ansible repo for running Tor relays and related apps.
+
+## Docs
+
+- [App toggles (enable/disable + hard-remove)](docs/app-toggles.md)
+- [Ops playbooks and scripts](docs/ops-and-scripts.md)
+- [Tor identity details](docs/tor-identity.md)
 
 ## What this repo does
 
@@ -23,10 +30,6 @@ This repo supports per-group and per-host toggles that control whether an app is
 - `app_tor_enabled`
 - `app_snowflake_enabled`
 - `app_conduit_enabled`
-
-Docs:
-
-- [App toggles (enable/disable + hard-remove)](docs/app-toggles.md)
 
 Important:
 
