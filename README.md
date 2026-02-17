@@ -1,52 +1,72 @@
-# tor-relay-ansible 
-[![License](https://img.shields.io/github/license/mmoradi97/tor-relay-ansible)](./LICENSE) [![Ansible](https://img.shields.io/badge/ansible-playbooks-EE0000?logo=ansible&logoColor=white)](https://www.ansible.com/) [![community.general](https://img.shields.io/badge/community.general-10.7.0-blue)](./collections/requirements.yml)
+[![CI](https://github.com/mmoradi97/tor-relay-ansible/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mmoradi97/tor-relay-ansible/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/mmoradi97/tor-relay-ansible)](./LICENSE)
 
-An Ansible repo to manage hosts running Tor relays, Snowflake proxies, and a Conduit container, plus baseline hardening and ops utilities.
+# tor-relay-ansible
 
-This repository is published in a **public-safe** form: it intentionally contains no real inventory, host metadata, or Tor identity artifacts.
+Public, sanitized Ansible repo for running Tor relays and related apps.
 
-## Repository layout
-- `playbooks/` – entrypoints you run (baseline + apps).
-- `roles/` – implementation roles (`os_baseline`, `security_baseline`, `app_tor`, `app_snowflake`, `app_conduit`, `monitoring_hetrixtools`).
-- `ops/` – utility playbooks (fleet updates, stats, geo summaries, identity backup/restore helpers).
-- `collections/requirements.yml` – pinned Ansible collections for reproducible installs.
-- `inventory.example/` – example inventory structure (copy into your private inventory).
+## What this repo does
 
-## Playbooks
-- `playbooks/os_baseline.yml` – OS baseline (packages, time sync, docker optional).
-- `playbooks/security_baseline.yml` – SSH hardening + UFW + fail2ban.
-- `playbooks/tor.yml` – Tor relay role.
-- `playbooks/snowflake.yml` – Snowflake proxy role.
-- `playbooks/conduit.yml` – Conduit role.
+- Baseline roles:
+  - `os_baseline`: OS-level baseline (packages, time sync, host settings, etc.).
+  - `security_baseline`: security baseline (SSH hardening, firewall/UFW, fail2ban, etc.).
 
-## Quickstart
-1) Install collections (pinned):
+- App roles:
+  - `app_tor`: install and configure Tor.
+  - `app_snowflake`: Snowflake proxy.
+  - `app_conduit`: Conduit.
+
+## App toggles (enable/disable)
+
+This repo supports per-group and per-host toggles that control whether an app is installed or **hard-removed** on the next run.
+
+- `app_tor_enabled`
+- `app_snowflake_enabled`
+- `app_conduit_enabled`
+
+Docs:
+
+- [App toggles (enable/disable + hard-remove)](docs/app-toggles.md)
+
+Important:
+
+- If `app_*_enabled: true`, the role installs/configures the app.
+- If `app_*_enabled: false`, the role uninstalls the app and removes what it manages (containers/volumes/files/packages).
+
+## Inventory layout
+
+This repo uses directory-based vars:
+
+- Defaults: `inventory/group_vars/all/`
+- Per-group: `inventory/group_vars/<group>/`
+- Per-host: `inventory/host_vars/<host>/`
+
+Example toggle files:
+
+- `inventory/group_vars/all/app_toggles.yml`
+- `inventory/group_vars/tsc/app_toggles.yml`
+- `inventory/group_vars/sc/app_toggles.yml`
+- `inventory/host_vars/<host>/app_toggles.yml` (optional override)
+
+## Common commands
+
+Run Conduit on a group (skip baseline dependencies)
 
 ```bash
-ansible-galaxy collection install -r collections/requirements.yml
-(Optional) Install Galaxy roles if you use requirements.yml:
+ansible-playbook -i inventory/hosts.ini playbooks/conduit.yml \
+  --limit <group-or-host> --tags app_conduit --skip-tags deps
+```
 
-bash
-ansible-galaxy role install -r requirements.yml
-Create your private inventory:
+Hard-remove Conduit from TSC (Tor relays)
 
-Copy inventory.example/ to a new local inventory/
+```bash
+ansible-playbook -i inventory/hosts.ini playbooks/conduit.yml \
+  --limit tsc --skip-tags deps
+```
 
-Put real hosts/vars in inventory/ and keep it out of git
+Run only baselines
 
-Run a baseline then an app playbook:
-
-bash
-ansible-playbook -i inventory/ playbooks/os_baseline.yml
-ansible-playbook -i inventory/ playbooks/security_baseline.yml
-ansible-playbook -i inventory/ playbooks/tor.yml
-Privacy / safety
-No real inventories, IPs, fingerprints, contact strings, or identity archives should be committed here.
-
-Tor identity material must stay private; the repo only keeps placeholder paths (e.g. roles/app_tor/files/identity/).
-
-Notes on badges
-The community.general badge is set to 10.7.0 to match collections/requirements.yml. Update it if you change the pin.
-
-License
-MIT (see LICENSE).
+```bash
+ansible-playbook -i inventory/hosts.ini playbooks/os_baseline.yml
+ansible-playbook -i inventory/hosts.ini playbooks/security_baseline.yml
+```

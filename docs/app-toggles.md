@@ -1,6 +1,6 @@
 # App toggles (enable/disable)
 
-This public repo supports per-group and per-host toggles that control whether each app should be installed or removed on the next run.
+This repo supports per-group and per-host toggles that control whether each app should be installed or removed on the next run.
 
 ## Variables
 
@@ -14,7 +14,7 @@ Ansible variable precedence gives you the control model you want:
 
 - Defaults for the whole fleet: `inventory/group_vars/all/app_toggles.yml`
 - Desired policy per group: `inventory/group_vars/<group>/app_toggles.yml` (example groups include `tsc` and `sc`)
-- Override a single host: create `inventory/host_vars/<host>/app_toggles.yml` (host vars override group vars)
+- Override a single host: `inventory/host_vars/<host>/app_toggles.yml` (host vars override group vars)
 
 ## How it behaves
 
@@ -31,7 +31,7 @@ Exact details are role-specific, but in general:
 
 - Conduit (`app_conduit`): removes the Docker container, removes its named volume, and tries to remove the image.
 - Snowflake (`app_snowflake`): brings the compose stack down, removes volumes/images, and deletes the project directory.
-- Tor (`app_tor`): stops/disables the `tor` service, removes packages and repo configuration, and deletes `/etc/tor` and `/var/lib/tor` (including identity).
+- Tor (`app_tor`): stops/disables the `tor` service, removes packages/repo config, and deletes `/etc/tor` and `/var/lib/tor` (including identity).
 
 ## Common workflows
 
@@ -64,7 +64,7 @@ ansible-playbook -i inventory/hosts.ini playbooks/snowflake.yml \
   --limit tor_relay_pl
 ```
 
-## Notes
+## Safety notes
 
-- Because disabled means uninstall, be careful when running playbooks against `hosts: all` without `--limit`.
+- Because disabled means uninstall, avoid running app playbooks against `hosts: all` without `--limit` unless you intend to converge the whole fleet.
 - If a host is unreachable, it will keep its current state until it becomes reachable and you rerun the playbook.
