@@ -29,8 +29,12 @@ jobs:
           ansible-galaxy collection install -r collections/requirements.yml
 
       - name: Syntax-check playbooks
+        env:
+          # Ensure the repo's ansible.cfg is used and local roles are discoverable.
+          ANSIBLE_CONFIG: ansible.cfg
+          ANSIBLE_ROLES_PATH: roles
         run: |
           for f in playbooks/*.yml; do
             echo "==> syntax-check: $f"
-            ansible-playbook -i inventory.example/hosts.ini --roles-path roles --syntax-check "$f"
+            ansible-playbook -i inventory.example/hosts.ini --syntax-check "$f"
           done
