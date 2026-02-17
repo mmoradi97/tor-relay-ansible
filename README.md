@@ -1,4 +1,3 @@
-[![CI](https://github.com/mmoradi97/tor-relay-ansible/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mmoradi97/tor-relay-ansible/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 [![Ansible](https://img.shields.io/badge/ansible-playbooks-EE0000?logo=ansible&logoColor=white)](https://www.ansible.com/)
 
