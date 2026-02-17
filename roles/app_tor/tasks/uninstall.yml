@@ -1,0 +1,38 @@
+---
+- name: Stop and disable Tor
+  ansible.builtin.systemd:
+    name: tor
+    state: stopped
+    enabled: false
+  failed_when: false
+
+- name: Remove Tor configuration directory (hard remove)
+  ansible.builtin.file:
+    path: /etc/tor
+    state: absent
+
+- name: Remove Tor data directory (hard remove, includes identity)
+  ansible.builtin.file:
+    path: "{{ tor_data_dir | default('/var/lib/tor') }}"
+    state: absent
+
+- name: Remove Tor packages (purge)
+  ansible.builtin.apt:
+    name: "{{ tor_packages | default(['tor','deb.torproject.org-keyring']) }}"
+    state: absent
+    purge: true
+    autoremove: true
+    update_cache: true
+
+- name: Remove Tor Project repository (best effort)
+  ansible.builtin.apt_repository:
+    filename: tor
+    state: absent
+    update_cache: true
+  failed_when: false
+
+- name: Remove Tor repo keyring (best effort)
+  ansible.builtin.file:
+    path: "{{ tor_repo_keyring_path | default('/usr/share/keyrings/tor-archive-keyring.gpg') }}"
+    state: absent
+  failed_when: false

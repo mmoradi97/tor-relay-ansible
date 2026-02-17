@@ -1,0 +1,27 @@
+---
+- name: Configure Tor repository
+  ansible.builtin.import_tasks: repo.yml
+  tags: [app_tor, tor_repo]
+  when: tor_manage_repo | bool
+
+- name: Install Tor
+  ansible.builtin.import_tasks: install.yml
+  tags: [app_tor, tor_install]
+
+# Put identity restore HERE (after install, before config)
+- name: Restore Tor identity (bootstrap only)
+  ansible.builtin.import_tasks: identity.yml
+  tags: [app_tor, tor_identity]
+  when: tor_restore_identity | bool
+
+- name: Validate ContactInfo
+  ansible.builtin.assert:
+    that:
+      - tor_contact_info is defined
+      - (tor_contact_info | trim | length) > 0
+    fail_msg: "tor_contact_info must be set (for Tor ContactInfo)"
+  tags: [app_tor, tor_config]
+
+- name: Configure torrc (reload-only)
+  ansible.builtin.import_tasks: config.yml
+  tags: [app_tor, tor_config]

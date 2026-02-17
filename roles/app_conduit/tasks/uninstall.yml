@@ -1,0 +1,24 @@
+- name: Ensure Docker SDK for Python is installed (for docker modules)
+  become: true
+  ansible.builtin.apt:
+    name: python3-docker
+    state: present
+    update_cache: true
+
+- name: Stop and remove Conduit container
+  community.docker.docker_container:
+    name: "{{ app_conduit_name }}"
+    state: absent
+    force_kill: true
+    keep_volumes: false
+
+- name: Remove Conduit named volume (hard remove)
+  community.docker.docker_volume:
+    name: "{{ app_conduit_volume }}"
+    state: absent
+
+- name: Remove Conduit image (best effort)
+  community.docker.docker_image:
+    name: "{{ app_conduit_image }}"
+    state: absent
+  failed_when: false

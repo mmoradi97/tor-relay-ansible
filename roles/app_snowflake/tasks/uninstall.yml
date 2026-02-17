@@ -1,0 +1,20 @@
+- name: Check if Snowflake directory exists
+  ansible.builtin.stat:
+    path: "{{ app_snowflake_dir }}"
+  register: snowflake_dir
+
+- name: Bring down Snowflake stack (compose)
+  become: true
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_snowflake_dir }}"
+    state: absent
+    remove_orphans: true
+    remove_volumes: true
+    remove_images: all
+  when: snowflake_dir.stat.exists
+
+- name: Remove Snowflake directory (hard remove)
+  become: true
+  ansible.builtin.file:
+    path: "{{ app_snowflake_dir }}"
+    state: absent

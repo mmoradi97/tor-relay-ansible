@@ -1,0 +1,4 @@
+# App toggles for SC (Conduit servers)
+app_tor_enabled: false
+app_snowflake_enabled: true
+app_conduit_enabled: true
