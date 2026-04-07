@@ -1,0 +1,15 @@
+# ansible-lint configuration
+# https://ansible.readthedocs.io/projects/lint/configuring/
+
+exclude_paths:
+  - .venv/
+  - collections/
+
+# Warn only (don't fail) on these rules
+warn_list:
+  - yaml[line-length]
+  - name[casing]
+
+# Skip these rules entirely
+skip_list:
+  - role-name  # local role names don't need to follow galaxy naming

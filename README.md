@@ -1,5 +1,7 @@
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![Lint](https://github.com/mmoradi97/tor-relay-ansible/actions/workflows/lint.yml/badge.svg)](https://github.com/mmoradi97/tor-relay-ansible/actions/workflows/lint.yml)
 [![Ansible](https://img.shields.io/badge/ansible-playbooks-EE0000?logo=ansible&logoColor=white)](https://www.ansible.com/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![Release](https://img.shields.io/github/v/release/mmoradi97/tor-relay-ansible)](https://github.com/mmoradi97/tor-relay-ansible/releases)
 
 # tor-relay-ansible
 
@@ -50,6 +52,8 @@ Example toggle files:
 - `inventory/group_vars/sc/app_toggles.yml`
 - `inventory/host_vars/<host>/app_toggles.yml` (optional override)
 
+See [`inventory.example/`](inventory.example/) for a full working template.
+
 ## Common commands
 
 Run Conduit on a group (skip baseline dependencies)
@@ -72,3 +76,7 @@ Run only baselines
 ansible-playbook -i inventory/hosts.ini playbooks/os_baseline.yml
 ansible-playbook -i inventory/hosts.ini playbooks/security_baseline.yml
 ```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
