@@ -1,0 +1,15 @@
+---
+# Tor torrc configuration.
+# This file is intentionally minimal in the public repo.
+# Real torrc values (ContactInfo, Nickname, bandwidth, etc.)
+# should be defined in your private inventory/group_vars.
+
+- name: Deploy torrc
+  ansible.builtin.template:
+    src: torrc.j2
+    dest: /etc/tor/torrc
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  notify: Reload Tor
