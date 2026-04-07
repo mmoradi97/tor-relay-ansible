@@ -11,11 +11,11 @@ services:
       - "{{ app_snowflake_summary_interval }}"
 
   watchtower:
-    image: {{ app_snowflake_watchtower_image }}
+    image: {{ app_watchtower_image }}
     container_name: watchtower
     restart: unless-stopped
     environment:
-      - DOCKER_API_VERSION={{ app_snowflake_watchtower_docker_api_version }}
+      - DOCKER_API_VERSION={{ app_watchtower_docker_api_version }}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval {{ app_snowflake_watchtower_interval }} --cleanup snowflake-proxy
+    command: --interval {{ app_watchtower_interval }} --cleanup snowflake-proxy

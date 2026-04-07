@@ -12,4 +12,6 @@ warn_list:
 
 # Skip these rules entirely
 skip_list:
-  - role-name  # local role names don't need to follow galaxy naming
+  - role-name           # local role names don't need galaxy naming
+  - var-naming          # existing var names are intentional (cross-role shared vars)
+  - name[missing]       # import_tasks without names is valid style

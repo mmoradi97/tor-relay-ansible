@@ -12,7 +12,7 @@
     group: root
     mode: "0644"
     content: |
-      Port {{ security_baseline_ssh_port }}
+      Port {{ security_ssh_port }}
       PermitRootLogin no
       PasswordAuthentication no
       KbdInteractiveAuthentication no

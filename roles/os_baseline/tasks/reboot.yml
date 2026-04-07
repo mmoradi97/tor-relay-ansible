@@ -2,7 +2,7 @@
 - name: Check if reboot is required
   ansible.builtin.stat:
     path: /var/run/reboot-required
-  register: os_baseline_reboot_required
+  register: reboot_required
 
 - name: Reboot if required
   ansible.builtin.reboot:
@@ -10,4 +10,4 @@
     reboot_timeout: 900
   when:
     - os_baseline_reboot_if_required | bool
-    - os_baseline_reboot_required.stat.exists
+    - reboot_required.stat.exists
