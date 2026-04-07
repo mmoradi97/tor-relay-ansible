@@ -1,4 +1,6 @@
-- hosts: tor_relays
+---
+- name: Tor relay
+  hosts: tor_relays
   become: true
   roles:
     - role: app_tor

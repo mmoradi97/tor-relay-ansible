@@ -18,7 +18,7 @@
 
 - name: Remove Tor packages (purge)
   ansible.builtin.apt:
-    name: "{{ tor_packages | default(['tor','deb.torproject.org-keyring']) }}"
+    name: "{{ tor_packages | default(['tor', 'deb.torproject.org-keyring']) }}"
     state: absent
     purge: true
     autoremove: true
@@ -26,13 +26,14 @@
 
 - name: Remove Tor Project repository (best effort)
   ansible.builtin.apt_repository:
-    filename: tor
+    repo: "deb [signed-by=/etc/apt/trusted.gpg.d/tor.asc] https://deb.torproject.org/torproject.org {{ ansible_distribution_release }} main"
+    filename: torproject
     state: absent
     update_cache: true
   failed_when: false
 
 - name: Remove Tor repo keyring (best effort)
   ansible.builtin.file:
-    path: "{{ tor_repo_keyring_path | default('/usr/share/keyrings/tor-archive-keyring.gpg') }}"
+    path: "{{ tor_repo_keyring_path | default('/etc/apt/trusted.gpg.d/tor.asc') }}"
     state: absent
   failed_when: false
