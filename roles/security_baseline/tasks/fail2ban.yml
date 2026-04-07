@@ -4,7 +4,7 @@
     name: fail2ban
     state: present
     update_cache: true
-  when: security_fail2ban_enabled
+  when: security_baseline_fail2ban_enabled
 
 - name: Configure fail2ban sshd jail
   ansible.builtin.copy:
@@ -17,19 +17,19 @@
       bantime = 1d
       findtime = 10m
       maxretry = 3
-      ignoreip = {{ security_fail2ban_ignoreip }}
+      ignoreip = {{ security_baseline_fail2ban_ignoreip }}
 
       [sshd]
       enabled = true
-      port = {{ security_ssh_port }}
+      port = {{ security_baseline_ssh_port }}
       backend = systemd
       mode = aggressive
   notify: Restart fail2ban
-  when: security_fail2ban_enabled
+  when: security_baseline_fail2ban_enabled
 
 - name: Ensure fail2ban is running
   ansible.builtin.systemd:
     name: fail2ban
     enabled: true
     state: started
-  when: security_fail2ban_enabled
+  when: security_baseline_fail2ban_enabled

@@ -1,4 +1,9 @@
 ---
-- ansible.builtin.import_tasks: ssh.yml
-- ansible.builtin.import_tasks: ufw.yml
-- ansible.builtin.import_tasks: fail2ban.yml
+- name: Configure SSH hardening
+  ansible.builtin.import_tasks: ssh.yml
+
+- name: Configure UFW firewall
+  ansible.builtin.import_tasks: ufw.yml
+
+- name: Configure fail2ban
+  ansible.builtin.import_tasks: fail2ban.yml
