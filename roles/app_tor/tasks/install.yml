@@ -1,0 +1,20 @@
+---
+# Tor package installation.
+# This file is intentionally minimal in the public repo.
+# Define real tasks in your private overlay or inventory.
+
+- name: Install Tor
+  ansible.builtin.apt:
+    name:
+      - tor
+      - deb.torproject.org-keyring
+    state: present
+    update_cache: true
+  become: true
+
+- name: Ensure Tor service is enabled and started
+  ansible.builtin.systemd:
+    name: tor
+    enabled: true
+    state: started
+  become: true

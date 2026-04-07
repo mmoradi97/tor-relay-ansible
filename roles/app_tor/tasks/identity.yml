@@ -1,0 +1,14 @@
+---
+# Tor relay identity restore (bootstrap only).
+# This file is intentionally minimal in the public repo.
+# Real identity restore logic lives in private inventory vars/files.
+# Set tor_restore_identity: false to skip entirely.
+
+- name: Ensure Tor data directory exists
+  ansible.builtin.file:
+    path: "{{ tor_data_dir }}"
+    state: directory
+    owner: debian-tor
+    group: debian-tor
+    mode: "0700"
+  become: true

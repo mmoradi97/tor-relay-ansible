@@ -1,0 +1,25 @@
+---
+# Tor APT repository setup.
+# This file is intentionally minimal in the public repo.
+# Define real tasks in your private overlay or inventory.
+
+- name: Install apt-transport-https
+  ansible.builtin.apt:
+    name: apt-transport-https
+    state: present
+    update_cache: true
+  become: true
+
+- name: Add Tor Project GPG key
+  ansible.builtin.get_url:
+    url: https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
+    dest: /etc/apt/trusted.gpg.d/tor.asc
+    mode: "0644"
+  become: true
+
+- name: Add Tor Project APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/trusted.gpg.d/tor.asc] https://deb.torproject.org/torproject.org {{ ansible_distribution_release }} main"
+    state: present
+    filename: torproject
+  become: true
